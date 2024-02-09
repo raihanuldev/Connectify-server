@@ -22,8 +22,28 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     
+    const usersCollection = client.db('connectify').collection('users');
 
 
+    app.get('/users/:id',async(req,res)=>{
+        res.send('data recibed')
+    })
+    app.post('/users', async (req, res) => {
+        const user = req.body;
+        const query = { email: user.email };
+        const exitingUser = await usersCollection.findOne(query);
+        if (exitingUser) {
+          // console.log(exitingUser);
+          return res.send({ Message: 'User Already exiting on Database' })
+        }
+        const result = await usersCollection.insertOne(user);
+        // console.log(result);
+        res.send(result)
+      })
+
+
+
+      
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
