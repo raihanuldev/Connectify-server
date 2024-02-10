@@ -21,39 +21,57 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    
+
     const usersCollection = client.db('connectify').collection('users');
     const mediaCollection = client.db('connectify').collection('media');
 
     // media
-    app.post('/media',async(req,res)=>{
+    app.post('/media', async (req, res) => {
       const post = req.body;
       console.log(post)
       const response = await mediaCollection.insertOne(post);
-      res.send({Message: response})
+      res.send({ Message: response })
     })
 
 
     // users 
-    app.get('/users/:id',async(req,res)=>{
-        res.send('data recibed')
-    })
+
     app.post('/users', async (req, res) => {
-        const user = req.body;
-        const query = { email: user.email };
-        const exitingUser = await usersCollection.findOne(query);
-        if (exitingUser) {
-          // console.log(exitingUser);
-          return res.send({ Message: 'User Already exiting on Database' })
-        }
-        const result = await usersCollection.insertOne(user);
-        // console.log(result);
-        res.send(result)
-      })
+      const user = req.body;
+      const query = { email: user.email };
+      const exitingUser = await usersCollection.findOne(query);
+      if (exitingUser) {
+        // console.log(exitingUser);
+        return res.send({ Message: 'User Already exiting on Database' })
+      }
+      const result = await usersCollection.insertOne(user);
+      // console.log(result);
+      res.send(result)
+    })
+
+    // New endpoint for handling PUT request to update user profile
+    app.put('/user/:id', async (req, res) => {
+      const id = req.params.id;
+      const updatedUser = req.body;
+      delete updatedUser._id;
+
+      const result = await usersCollection.findOneAndUpdate(
+        { _id: new ObjectId(id) },
+        { $set: updatedUser },
+        { returnOriginal: false }
+      )
+    });
+    
+    // Get User for Build Profile Info.
+    app.get('/user', async (req, res) => {
+      const email = req.query.email;
+      const user = await usersCollection.findOne({ email });
+      // console.log(user);
+      res.send(user);
+    })
 
 
 
-      
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -64,12 +82,12 @@ async function run() {
 run().catch(console.dir);
 
 
-app.get('/',async(req,res)=>{
-    res.send('server going well')
+app.get('/', async (req, res) => {
+  res.send('server going well')
 })
 
 
 
 app.listen(port, () => {
-    console.log('Hey Dev! No pain no gain',port);
-  })
+  console.log('Hey Dev! No pain no gain', port);
+})
