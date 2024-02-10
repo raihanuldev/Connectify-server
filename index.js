@@ -23,8 +23,18 @@ async function run() {
   try {
     
     const usersCollection = client.db('connectify').collection('users');
+    const mediaCollection = client.db('connectify').collection('media');
+
+    // media
+    app.post('/media',async(req,res)=>{
+      const post = req.body;
+      console.log(post)
+      const response = await mediaCollection.insertOne(post);
+      res.send({Message: response})
+    })
 
 
+    // users 
     app.get('/users/:id',async(req,res)=>{
         res.send('data recibed')
     })
