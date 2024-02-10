@@ -1,5 +1,5 @@
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
 const app = express();
 const port = 3000;
@@ -32,8 +32,41 @@ async function run() {
       const response = await mediaCollection.insertOne(post);
       res.send({ Message: response })
     })
-
-
+    
+    // Get All Post 
+    app.get('/media', async(req,res)=>{
+      const result = await mediaCollection.find().toArray();
+      res.send(result);
+    })
+    app.get('/media/top', async (req, res) => {
+      try {
+        const pipeline = [
+          {
+            $project: {
+              _id: 1,
+              email: 1,
+              caption: 1,
+              image: 1,
+              date: 1,
+              reactions: { $sum: [{ $ifNull: ['$like', 0] }] } // Assuming 'like' field represents reactions
+            }
+          },
+          {
+            $sort: { reactions: -1 }
+          },
+          {
+            $limit: 3
+          }
+        ];
+    
+        const topPosts = await mediaCollection.aggregate(pipeline).toArray();
+        res.send(topPosts);
+      } catch (error) {
+        console.error('Error fetching top posts:', error);
+        res.status(500).send({ error: 'An error occurred while fetching top posts.' });
+      }
+    });
+    
     // users 
 
     app.post('/users', async (req, res) => {
