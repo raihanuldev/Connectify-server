@@ -66,6 +66,35 @@ async function run() {
         res.status(500).send({ error: 'An error occurred while fetching top posts.' });
       }
     });
+    // popular
+    app.get('/media/popular', async (req, res) => {
+      try {
+        const pipeline = [
+          {
+            $project: {
+              _id: 1,
+              email: 1,
+              caption: 1,
+              image: 1,
+              date: 1,
+              reactions: { $sum: ['$like', '$love'] } // Sum of 'like' and 'love' fields
+            }
+          },
+          {
+            $sort: { reactions: -1 }
+          },
+          {
+            $limit: 3
+          }
+        ];
+    
+        const topPosts = await mediaCollection.aggregate(pipeline).toArray();
+        res.send(topPosts);
+      } catch (error) {
+        console.error('Error fetching top posts:', error);
+        res.status(500).send({ error: 'An error occurred while fetching top posts.' });
+      }
+    });
     
     // users 
 
